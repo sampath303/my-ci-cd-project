@@ -1,16 +1,23 @@
-name: Test Self-Hosted Runner
+name: Docker CI/CD
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
-  test-runner:
-    runs-on: self-hosted
+  build-and-push:
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Print System Info
-        run: uname -a
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u sampath303 --password-stdin
 
-      - name: List Files
-        run: ls -alh
+      - name: Build Docker image
+        run: docker build -t ghcr.io/sampath303/my-ci-cd-project:latest .
+
+      - name: Push Docker image to GitHub Container Registry
+        run: docker push ghcr.io/sampath303/my-ci-cd-project:latest
