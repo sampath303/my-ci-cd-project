@@ -3,45 +3,48 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - main  # This triggers the workflow on push to main branch
+      - main  # Triggers on push to main branch
 
 jobs:
   deploy:
-    runs-on: self-hosted  # Using your EC2 as a self-hosted runner
+    runs-on: self-hosted  # Running on your EC2 instance
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4  # Updated to latest version
 
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '14'
+        node-version: '18'  # Updated to latest stable version
 
     - name: Install Dependencies
       run: npm install
+      working-directory: ./my-ci-cd-project  # Change if your project is in a subdirectory
 
     - name: Run Unit Tests
       run: npm test
+      working-directory: ./my-ci-cd-project
 
     - name: Run Integration Tests
       run: npm run test:integration
+      working-directory: ./my-ci-cd-project
 
     - name: Build Docker Image
-      run: docker build -t my-html-app .
+      run: docker build -t my-html-app:latest .
+      working-directory: ./my-ci-cd-project
 
-    - name: Stop and Remove Old Container
+    - name: Stop and Remove Old Container (if exists)
       run: |
-        docker stop my-html-container || true
-        docker rm my-html-container || true
+        docker ps -q --filter "name=my-html-container" | grep -q . && docker stop my-html-container && docker rm my-html-container || echo "No existing container to remove"
 
     - name: Run New Container
-      run: docker run -d -p 8080:80 --name my-html-container my-html-app
+      run: docker run -d -p 8080:80 --name my-html-container my-html-app:latest
 
     - name: Wait for Container to Initialize
-      run: sleep 15
+      run: sleep 10
 
     - name: Check Running Containers
       run: |
         docker ps -a
-        docker logs my-html-container || true
+        docker logs my-html-container || echo "No logs found"
