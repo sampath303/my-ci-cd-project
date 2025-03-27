@@ -1,4 +1,4 @@
-const assert = require('chai').assert;
+import { assert } from 'chai';
 
 // Example JavaScript function in the static HTML file
 function greet() {
